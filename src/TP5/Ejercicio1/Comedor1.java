@@ -17,6 +17,7 @@ public class Comedor1 {
     private int cantEsperaMismaEspecie;
     private char turno;
     private char[] especie;
+    private boolean esPrimero;
     private Semaphore semComedero;
     private Semaphore semEnEspera;
     private ReentrantLock cerrojo;
@@ -29,7 +30,7 @@ public class Comedor1 {
         this.cantMax = cantMax;
         this.cantEnEspera = 0;
         this.cantEsperaMismaEspecie = 0;
-        this.turno = especie[(new Random()).nextInt(especie.length)];
+        this.esPrimero = true;
         this.semComedero = new Semaphore(this.cantComederos);
         this.semEnEspera = new Semaphore (0);
         this.especie = especie;
@@ -42,6 +43,8 @@ public class Comedor1 {
 
         try{
             this.cerrojo.lock();
+            if (this.esPrimero)
+                this.turno = tipo;
             verificacion = (this.turno == tipo && this.cantComieron < this.cantMax);
         } finally{
             this.cerrojo.unlock();
