@@ -72,6 +72,7 @@ public class Sala {
         this.jubiladosEnEspera--;
         System.out.println(Thread.currentThread().getName() + " entro a la sala.");
         this.cantEnSala++;
+        this.notifyAll(); // Notifica en caso que haya un hilo persona esperando y jubilados esperando sea 0.
     }
     
     public synchronized void salirSala(){

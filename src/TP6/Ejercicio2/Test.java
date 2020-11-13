@@ -22,7 +22,7 @@ public class Test {
         
         for (int i = 0; i < cantPersonas; i++) {
             
-            if(i>5)
+            if (i>5)
                 persona[i] = new Thread(new Jubilado(sala), color.cambiarColorTexto(i, "Jubilado "+ (i+1)));
             else
                 persona[i] = new Thread(new Persona(sala), color.cambiarColorTexto(i, "Persona " + (i+1)));
