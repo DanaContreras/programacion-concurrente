@@ -33,46 +33,41 @@ public class TextoAColor {
         
     }
     
-    public static String getNEGRO() {
-        return NEGRO;
+    public String colorNEGRO(String texto) {
+        return NEGRO + texto + FINALIZAR_COLOR;
     }
 
-    public static String getROJO() {
-        return ROJO;
+    public String colorROJO(String texto) {
+        return ROJO + texto + FINALIZAR_COLOR;
     }
 
-    public static String getVERDE() {
-        return VERDE;
+    public String colorVERDE(String texto) {
+        return VERDE + texto + FINALIZAR_COLOR;
     }
 
-    public static String getAMARILLO() {
-        return AMARILLO;
+    public String colorAMARILLO(String texto) {
+        return AMARILLO + texto + FINALIZAR_COLOR;
     }
 
-    public static String getAZUL() {
-        return AZUL;
+    public String colorAZUL(String texto) {
+        return AZUL + texto + FINALIZAR_COLOR;
     }
 
-    public static String getPURPLE() {
-        return VIOLETA;
+    public String colorPURPLE(String texto) {
+        return VIOLETA + texto + FINALIZAR_COLOR;
     }
 
-    public static String getCYAN() {
-        return CYAN;
+    public String colorCYAN(String texto) {
+        return CYAN + texto + FINALIZAR_COLOR;
     }
 
-    public static String getBLANCO() {
-        return BLANCO;
-    }
-
-    public static String getFINALIZAR_COLOR() {
-        return FINALIZAR_COLOR;
+    public String colorBLANCO(String texto) {
+        return BLANCO + texto + FINALIZAR_COLOR;
     }
     
     public String cambiarColorTexto(int tipo, String texto){
         
         tipo = tipo % 6;
-        
         return (this.hash.get(tipo) + texto + this.FINALIZAR_COLOR);
     }
     
