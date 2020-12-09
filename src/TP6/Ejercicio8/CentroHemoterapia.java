@@ -9,7 +9,7 @@ import Utiles.Cola;
 
 public class CentroHemoterapia {
 
-    private int turnoActual;
+    private int turnoActual; //Manejo de turno como un rango. Turno esta en el rango 
     private int proximoTurno;
     private int numCamas;
     private int numSillasEspera;
@@ -58,7 +58,7 @@ public class CentroHemoterapia {
         try{
             this.lock.lock();
             
-            boolean seguir,enSilla = (decision == 0 && numSillasEspera > 0), conRevista;
+            boolean seguir, enSilla = (decision == 0 && numSillasEspera > 0), conRevista;
             this.ordenTurno.poner(turno);
             
             if (enSilla){ // Persona decide usar una silla.

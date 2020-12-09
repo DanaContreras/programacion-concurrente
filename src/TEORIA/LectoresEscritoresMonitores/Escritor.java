@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package LectoresEscritoresMonitores;
+package TEORIA.LectoresEscritoresMonitores;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;

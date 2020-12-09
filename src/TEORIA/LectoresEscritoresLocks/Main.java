@@ -1,4 +1,4 @@
-package LectoresEscritoresMonitores;
+package TEORIA.LectoresEscritoresLocks;
 import Utiles.TextoAColor;
 
 public class Main {

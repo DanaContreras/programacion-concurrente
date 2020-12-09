@@ -124,7 +124,7 @@ public class Comedor2 {
                     this.semEnEspera.release(this.cantEnEspera);
                     this.cantEnEspera = 0;
                 }
-                
+                System.out.println("semEspera = " + semEnEspera.availablePermits());
             }
             
             int cantOcupar = 1;
