@@ -1,90 +1,146 @@
 package RecursosCompartidos;
 
-import Utiles.PedidoSnorkel;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class Snorkel {
     
     private int ordenLlegada;
-    private int maxEquipos;
-    private Queue<PedidoSnorkel> pedidosPendientes;
-    private Queue<PedidoSnorkel> pedidosAtendidos;
-    private final Object monitorAtender;
-    private final Object monitorPedidosAtendidos;
+    private int maxSnorkel;
+    private int maxSalvavidas;
+    private int maxPatasDeRana;
+    private final Queue<Integer> pedidosPendientes;
+    private final Queue<Integer> pedidosAtendidos;
+    private final ReentrantLock lockAtender;
+    private final ReentrantLock lockPedidoAtendido;
+    private final Condition esperaAtender;
+    private final Condition esperaPedidoAtendido;
+    private final Condition esperaDisponibilidad;
     
-    public Snorkel (int maxEquipos) {
+    public Snorkel (int maxSnorkel, int maxSalvavidas, int maxPatasDeRana) {
         this.ordenLlegada = 0;
-        this.maxEquipos = maxEquipos;
+        this.maxSnorkel = maxSnorkel;
+        this.maxSalvavidas = maxSalvavidas;
+        this.maxPatasDeRana = maxPatasDeRana;
         this.pedidosPendientes = new LinkedList<>();
         this.pedidosAtendidos = new LinkedList<>();
-        this.monitorAtender = new Object();
-        this.monitorPedidosAtendidos = new Object();
+        this.lockAtender = new ReentrantLock(true);
+        this.lockPedidoAtendido = new ReentrantLock(true);
+        this.esperaAtender = lockAtender.newCondition();
+        this.esperaDisponibilidad = lockAtender.newCondition();
+        this.esperaPedidoAtendido = lockPedidoAtendido.newCondition();
     }
     
     // metodos de AsistenteSnorkel
     public void atenderVisitante() throws InterruptedException {
         
-        PedidoSnorkel pedidoActual;
+        boolean haySnorkel, haySalvavidas, hayPatasDeRana;
+        int pedidoActual; // num del pedido
         
-        synchronized(monitorAtender) {
+        this.lockAtender.lock();
+        try {        
             while (pedidosPendientes.isEmpty())
-                this.monitorAtender.wait();
+                esperaAtender.await();
             
             System.out.println(Thread.currentThread().getName() + " le solicitaron un equipo. Verificara si hay uno disponible.");
             
             pedidoActual = pedidosPendientes.poll();
-            if (maxEquipos == 0)
-                pedidoActual.setDisponibilidad(false);
-            else {
-                maxEquipos--;
-                pedidoActual.setDisponibilidad(true);
+            
+            haySnorkel = (maxSnorkel != 0);
+            if (haySnorkel)
+                maxSnorkel--;
+            
+            haySalvavidas = (maxSalvavidas != 0);
+            if (haySalvavidas)
+                maxSalvavidas--;
+            
+            hayPatasDeRana = (maxPatasDeRana != 0);
+            if (hayPatasDeRana)
+                maxPatasDeRana--;
+            
+            if (!haySnorkel || !haySalvavidas || !hayPatasDeRana)
+                System.out.println(Thread.currentThread().getName() + " no encontro un equipo completo. Quedan snorkel:" + maxSnorkel + " salvavidas:" + maxSalvavidas + " patas de rana: " + maxPatasDeRana);
+            
+            while (!haySnorkel || !haySalvavidas || !hayPatasDeRana) {
+                esperaDisponibilidad.await();
+                
+                if (!haySnorkel && maxSnorkel != 0) {
+                    haySnorkel = true; 
+                    maxSnorkel--; 
+                }
+
+                if (!haySalvavidas && maxSalvavidas != 0) {
+                    haySalvavidas = true;
+                    maxSalvavidas--;
+                }
+
+                if (!hayPatasDeRana && maxPatasDeRana != 0) {
+                    hayPatasDeRana = true;
+                    maxPatasDeRana--;
+                }
             }
             
-            System.out.println(Thread.currentThread().getName() + " le avisa al Visitante con orden " + pedidoActual.getOrdenPedido() + " que " + (pedidoActual.getDisponibilidad()? "hay" : "no hay") + " equipo disponible. Quedan " + maxEquipos);
+            System.out.println(Thread.currentThread().getName() + " le avisa al Visitante con orden " + pedidoActual + " que hay equipo disponible. Quedan snorkel:" + maxSnorkel + " salvavidas:" + maxSalvavidas + " patas de rana: " + maxPatasDeRana);
+        } finally {            
+            this.lockAtender.unlock();
+        }
+            
+        this.lockPedidoAtendido.lock();
+        try {
+            pedidosAtendidos.add(pedidoActual);
+            esperaPedidoAtendido.signalAll();
+        } finally {
+            this.lockPedidoAtendido.unlock();
         }
         
-        synchronized (monitorPedidosAtendidos) {
-            pedidosAtendidos.add(pedidoActual);
-            monitorPedidosAtendidos.notifyAll();
-        }
     }
-    
     
     // metodos del hilo Visitante.
     public int pedirEquipo() {
-        synchronized(monitorAtender) {
+        this.lockAtender.lock();
+        try {
             ordenLlegada++;
-            pedidosPendientes.add(new PedidoSnorkel(ordenLlegada));
-            monitorAtender.notifyAll();
+            pedidosPendientes.add(ordenLlegada);
+            esperaAtender.signalAll();
             System.out.println(Thread.currentThread().getName() + " con orden " + ordenLlegada + " pidio un equipo.");
+        } finally {
+            this.lockAtender.unlock();
         }
         return ordenLlegada;
     }
     
-    public boolean esperarSerAtendido(int ordenLlegada) throws InterruptedException {
-        PedidoSnorkel pedidoActual;
+    public void esperarSerAtendido(int ordenLlegada) throws InterruptedException {
+        Integer pedidoActual;
         
-        synchronized(monitorPedidosAtendidos) {
+        this.lockPedidoAtendido.lock();
+        try {
             pedidoActual = pedidosAtendidos.peek();
-            while (pedidoActual == null || pedidoActual.getOrdenPedido() != ordenLlegada) {
-                this.monitorPedidosAtendidos.wait();
+            while (pedidoActual == null || pedidoActual != ordenLlegada) {
+                esperaPedidoAtendido.await();
                 pedidoActual = pedidosAtendidos.peek();
             }
-                
+            
             pedidosAtendidos.poll();
-            System.out.println(Thread.currentThread().getName() + " con orden " + pedidoActual.getOrdenPedido() + ""+ (pedidoActual.getDisponibilidad()? "" : " NO" ) + " obtuvo un equipo." );
+            System.out.println(Thread.currentThread().getName() + " con orden " + pedidoActual + " obtuvo un equipo." );
+        } finally {
+            this.lockPedidoAtendido.unlock();
         }
-        
-        return pedidoActual.getDisponibilidad();
     }
     
     public void devolverEquipo() {
-        synchronized(monitorAtender) {
-            maxEquipos++;
+        this.lockAtender.lock();
+        try {
+            maxSnorkel++;
+            maxSalvavidas++;
+            maxPatasDeRana++;
+            esperaDisponibilidad.signalAll();
+        } finally {
+            this.lockAtender.unlock();
         }
         
-        System.out.println(Thread.currentThread().getName() + " dejo el equipo en el stand. Hay " + maxEquipos + " equipos disponibles.");
+        System.out.println(Thread.currentThread().getName() + " dejo el equipo en el stand. Snorkel:" + maxSnorkel + " salvavidas:" + maxSalvavidas + " patas de rana: " + maxPatasDeRana);
     }
     
 }

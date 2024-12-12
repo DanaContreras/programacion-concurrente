@@ -7,8 +7,6 @@ public class ColectivoFolklorico {
     private boolean fueNotificado;
     private int cantVisitantes;
     private final int maxVisitantes;
-    private final Object monitorDisponibilidad;
-    private final Object monitorVisitante;
     
     public ColectivoFolklorico (int maxVisitantes) {
         this.comenzoRecorrido = false;
@@ -16,73 +14,54 @@ public class ColectivoFolklorico {
         this.fueNotificado = true;
         this.cantVisitantes = 0;
         this.maxVisitantes = maxVisitantes;
-        this.monitorDisponibilidad = new Object();
-        this.monitorVisitante = new Object();
     }
     
     // metodos usados por hilo Conductor
-    public void esperarVisitantes() throws InterruptedException {
+    public synchronized void esperarVisitantes() throws InterruptedException {
         System.out.println(Thread.currentThread().getName() + " espera por visitantes para empezar recorrido al parque.");
         
-        synchronized (monitorDisponibilidad) {
             while (fueNotificado || cantVisitantes == 0) {
                 fueNotificado = false;
-                this.monitorDisponibilidad.wait(2000);
+                this.wait(2000);
             }
             
             comenzoRecorrido = true;
             System.out.println(Thread.currentThread().getName() + " espero demasiado y comienza el recorrido con " + cantVisitantes + "/" + maxVisitantes + " visitantes.");
-        }
     }
     
-    public void terminarRecorrido() throws InterruptedException {
-        synchronized (monitorVisitante) {
-            System.out.println(Thread.currentThread().getName() + " avisa a visitantes que pueden bajarse.");
-            terminoRecorrido = true;
-            this.monitorVisitante.notifyAll();
-        }
+    public synchronized void terminarRecorrido() throws InterruptedException {
+        System.out.println(Thread.currentThread().getName() + " avisa a visitantes que pueden bajarse.");
+        terminoRecorrido = true;
+        this.notifyAll();
         
-        synchronized (monitorDisponibilidad) {
-            while (comenzoRecorrido)
-                this.monitorDisponibilidad.wait();
-        }
+        while (comenzoRecorrido)
+            this.wait();
     }
     
     // metodos usados por hilo Visitante.
-    public void subirseColectivo() throws InterruptedException {
+    public synchronized void subirseColectivo() throws InterruptedException {
         System.out.println(Thread.currentThread().getName() + " quiere subirse al colectivo folklorico.");
-        
-        synchronized (monitorDisponibilidad) {
-            while (comenzoRecorrido || cantVisitantes == maxVisitantes)
-                this.monitorDisponibilidad.wait();
+        while (comenzoRecorrido || cantVisitantes == maxVisitantes)
+            this.wait();
             
-            cantVisitantes++;
-            fueNotificado = true;
-            this.monitorDisponibilidad.notifyAll();
-            System.out.println(Thread.currentThread().getName() + " subio al colectivo. Ocupado " + cantVisitantes + "/" + maxVisitantes + ".");
-        }
+        cantVisitantes++;
+        fueNotificado = true;
+        this.notifyAll();
+        System.out.println(Thread.currentThread().getName() + " subio al colectivo. Ocupado " + cantVisitantes + "/" + maxVisitantes + ".");
     }
     
-    public void bajarseColectivo() throws InterruptedException {
+    public synchronized void bajarseColectivo() throws InterruptedException {
+   
+        while (!terminoRecorrido)
+            this.wait();
         
-        synchronized (monitorVisitante) {
-            while (!terminoRecorrido)
-                this.monitorVisitante.wait();
-        }
-        
-        synchronized (monitorDisponibilidad) {
-            cantVisitantes--;
-            System.out.println(Thread.currentThread().getName() + " se bajo del colectivo.");
+        cantVisitantes--;
+        System.out.println(Thread.currentThread().getName() + " se bajo del colectivo.");
             
-            if (cantVisitantes == 0) {
-                comenzoRecorrido = false;
-                
-                synchronized (monitorVisitante) {
-                    terminoRecorrido = false;
-                }
-                
-                this.monitorDisponibilidad.notifyAll();
-            }
+        if (cantVisitantes == 0) {
+            comenzoRecorrido = false;
+            terminoRecorrido = false;
+            this.notifyAll();
         }
     }
     

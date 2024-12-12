@@ -10,12 +10,14 @@ public class MainSnorkel {
     public static void main(String[] args) {
 
         TextoAColor txtColor = new TextoAColor();
-        int maxEquipos = 4;
+        int maxSnorkel = 3;
+        int maxPatasDeRana = 4;
+        int maxSalvavidas = 5;
         int maxAsistentes = 2;
         int maxVisitantes = 15;
 
         // recurso compartido
-        Snorkel snorkel = new Snorkel(maxEquipos);
+        Snorkel snorkel = new Snorkel(maxSnorkel, maxSalvavidas, maxPatasDeRana);
 
         // creacion de hilos
         Thread asistente[] = new Thread[maxAsistentes];

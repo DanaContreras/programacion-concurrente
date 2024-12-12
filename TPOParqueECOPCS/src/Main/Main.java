@@ -31,7 +31,9 @@ public class Main {
         int duracion = 20;
         
         // Snorkel
-        int maxEquipos = 4;
+        int maxSnorkel = 2;
+        int maxSalvavidas = 3;
+        int maxPatasDeAgua = 2;
         int maxAsistentes = 2;
         
         // Restaurantes
@@ -62,7 +64,7 @@ public class Main {
         ColectivoFolklorico colectivo = new ColectivoFolklorico(maxEnColectivo);
         Shop shop = new Shop(maxCajas);
         NadoDelfines nadoDelfines = new NadoDelfines(maxPiletas, maxEnGrupo);
-        Snorkel snorkel = new Snorkel(maxEquipos);
+        Snorkel snorkel = new Snorkel(maxSnorkel, maxSalvavidas, maxPatasDeAgua);
         Restaurantes restaurantes = new Restaurantes(maxRest1, maxRest2, maxRest3);
         MundoAventura mundoAventura = new MundoAventura(maxCuerdas, maxEnSaltos, maxEnTirolesa);
         FaroMirador faroMirador = new FaroMirador(maxEnEscalera);

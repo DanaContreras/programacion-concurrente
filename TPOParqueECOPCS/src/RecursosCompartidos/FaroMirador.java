@@ -14,12 +14,14 @@ public class FaroMirador {
     private final Semaphore semAtencion;
     private final Semaphore semVisitante;
     private final Semaphore semAdmin;
+    private final Semaphore semFaro;
     
     public FaroMirador (int maxEnEscaleras) {
         this.cantColaUno = 0;
         this.cantColaDos = 0;
         this.mutexColas = new Semaphore(1);
         this.semEscalera = new Semaphore(maxEnEscaleras);
+        this.semFaro = new Semaphore(maxEnEscaleras * 2);
         this.semToboganUno = new Semaphore(1, true);
         this.semToboganDos = new Semaphore(1, true);
         this.semAtencion = new Semaphore(1, true);
@@ -56,7 +58,8 @@ public class FaroMirador {
         System.out.println(Thread.currentThread().getName() + " está subiendo por la escalera caracol.");
     }
     
-    public void salirDeEscalera() {
+    public void salirDeEscalera() throws InterruptedException{
+        this.semFaro.acquire();
         this.semEscalera.release();
     }
     
@@ -95,6 +98,7 @@ public class FaroMirador {
         else
             this.semToboganDos.release();
         
+        this.semFaro.release();
         System.out.println(Thread.currentThread().getName() + " salio del tobogan " + (enToboganUno? "uno" : "dos") + " y ya se encuentra en la pileta.");
     }
     

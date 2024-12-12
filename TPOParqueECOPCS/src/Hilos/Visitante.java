@@ -211,17 +211,14 @@ public class Visitante implements Runnable{
     }
     
     private void realizarSnorkel() throws InterruptedException{
-        boolean disponibilidad;
         int ordenLlegada;
         
         do {
             this.simularTiempo(4, " se va a recorrer el parque y decidir que actividad hacer.");
             ordenLlegada = this.snorkel.pedirEquipo();
-            disponibilidad = this.snorkel.esperarSerAtendido(ordenLlegada);
-            if (disponibilidad){
-                simularTiempo(2, " termino de realizar Snorkel.");
-                this.snorkel.devolverEquipo();
-            }
+            this.snorkel.esperarSerAtendido(ordenLlegada);
+            simularTiempo(2, " termino de realizar Snorkel.");
+            this.snorkel.devolverEquipo();
         } while (esTest);
     }
     
